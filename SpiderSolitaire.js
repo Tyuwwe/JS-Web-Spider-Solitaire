@@ -29,16 +29,14 @@ var game = {
         //添加鼠标经过事件
         this.addOverEvent();
 
-        const CardAttr = document.getElementsByClassName('card')[0].getBoundingClientRect();;
-
         document.addEventListener('mousemove', (e) => {
             //console.log(this.isDragging);
             
             if (this.isDragging) {
                 var x = e.clientX - this.offsetX;
                 var y = e.clientY - this.offsetY;
-                //console.log(CardAttr.width);
-                this.selectCard.style.width = String(CardAttr.width) + 'px';
+                
+                this.selectCard.style.width = '9.025%';
                 this.selectCard.style.left = x + 'px';
                 this.selectCard.style.top = y + 'px';
                 this.selectCard.setAttribute("class", "card card-drag");
@@ -149,6 +147,7 @@ var game = {
         }
     },
     checkDrop: function(toDropCard, DropCard) {
+        //Drop要放到的牌（也就是要放到的牌），toDrop要放的牌（也就是正在拖拽的牌）
         let Drop = DropCard.innerText;
         let toDrop = toDropCard.innerText;
         console.log('Drop: ' + Drop + ' toDrop: ' + toDrop);
