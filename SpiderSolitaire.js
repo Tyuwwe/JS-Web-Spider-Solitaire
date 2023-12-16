@@ -249,8 +249,10 @@ var game = {
         let allCols = document.getElementsByClassName('co');
         for(i = 0; i < 10; i ++) {
             allCols[i].addEventListener('mouseover', (e) => {
-                this.hoverCol = e.target;
-                //console.log(this.hoverCol);
+                if(e.target.id.slice(0, 2) == "co") {
+                    this.hoverCol = e.target;
+                    //console.log(this.hoverCol);
+                }
             })
         }
 
@@ -289,7 +291,7 @@ var game = {
         //循环判定牌是否可以成组
         for(i = dragRow; i < this.data[dragCol].length - 2; i++) {
             let nextCard = document.getElementById('c' + dragCol + (i + 1)).innerText;
-            console.log(this.cardlist.indexOf(nextCard) - this.cardlist.indexOf(toDragCard.innerText));
+            //console.log(this.cardlist.indexOf(nextCard) - this.cardlist.indexOf(toDragCard.innerText));
             if(this.cardlist.indexOf(nextCard) - this.cardlist.indexOf(toDragCard.innerText) == (1 + i - dragRow)) {
                 this.boundCards.push(document.getElementById('c' + dragCol + i));
                 console.log("add card c" + dragCol + i);
