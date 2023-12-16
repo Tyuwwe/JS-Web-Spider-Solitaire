@@ -97,3 +97,17 @@ body {
     top: 80%;
     font-size: 80px;
 }
+
+.copyright {
+    position: absolute;
+    font-size: 15px;
+    color: rgb(190, 165, 128);
+    bottom: 10px;
+    left: 50%;
+    transform: translate(-50%, 0);
+    transition-duration: 0.4s;
+}
+
+.copyright:hover {
+    color: rgb(100, 87, 67);
+}
