@@ -80,10 +80,11 @@ var game = {
             }
             else {
                 //空列
-                let hoverColID = this.hoverCol.id.slice(2);
                 let bDropEmpty = 0;
                 if(this.hoverCol) {
-                    bDropEmpty = this.data[Number(hoverColID)].length == 1;
+                    let hoverColID = this.hoverCol.id.slice(2);
+                    console.log("hoverColID: " + hoverColID);
+                    bDropEmpty = this.data[Number(hoverColID) % 10].length == 1;
                 }
                 if(canDrop || bDropEmpty) {
                     this.score--;
@@ -252,6 +253,10 @@ var game = {
                 //console.log(this.hoverCol);
             })
         }
+
+        document.getElementById('all').addEventListener('mouseout', () => {
+            this.hoverCol = null;
+        })
     },
     checkDrop: function(toDropCard, DropCard) {
         //Drop要放到的牌（也就是要放到的牌），toDrop要放的牌（也就是正在拖拽的牌）
