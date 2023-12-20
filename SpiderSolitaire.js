@@ -125,6 +125,10 @@ var game = {
                 this.selectCard.style.width = '';
                 this.selectCard.setAttribute("class", "card");
             }
+            if(this.hoverCard) {
+                this.selectCard = this.hoverCard;
+            }
+            this.deleteFullSet();
             //console.log(this.checkDrop(this.selectCard, this.hoverCard));
         });
     },
@@ -308,6 +312,24 @@ var game = {
     },
     updateScore: function() {
         document.getElementById('score').innerText = this.score;
+    },
+    deleteFullSet: function() {
+        let checkCol = this.hoverCard.id.slice(1, 2);
+        let cardCol = "";
+        for(i = 0; i < this.data[checkCol].length - 1; i++) {
+            cardCol += document.getElementById('c' + checkCol + i).innerText;
+        }
+        console.log(cardCol);
+        if(cardCol.includes("K")) {
+            if(cardCol.slice(cardCol.lastIndexOf('K')) == "KQJ1098765432A") {
+                for(i = cardCol.lastIndexOf('K'); i < this.data[checkCol].length - 1; i++) {
+                    document.getElementById("co" + checkCol).removeChild(document.getElementById('c' + checkCol + i));
+                }
+                document.getElementById('c' + checkCol + (cardCol.lastIndexOf('K') - 1)).setAttribute("class", "card");
+                this.data[checkCol] = ['0'];
+                this.score += 100;
+            }
+        }
     }
 }
 
