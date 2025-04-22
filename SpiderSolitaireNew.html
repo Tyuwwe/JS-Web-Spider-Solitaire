@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Improved Spider Solitaire</title>
+  <style>
+    :root {
+      --card-width: 100px;
+      --card-height: 140px;
+      --table-color: #076324;
+      --card-color: #fff;
+      --card-back: #b30000;
+      --shadow-color: rgba(0, 0, 0, 0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+      -moz-user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    body {
+      padding: 0;
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      background-color: var(--table-color);
+      overflow-x: hidden;
+    }
+
+    .header {
+      width: 100%;
+      position: fixed;
+      top: 0;
+      height: 60px;
+      background-color: #044018;
+      color: #fff;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      font-size: 24px;
+      font-weight: bold;
+      box-shadow: 0 4px 6px var(--shadow-color);
+      z-index: 100;
+    }
+
+    .score-container {
+      display: flex;
+      align-items: center;
+    }
+
+    .score-label {
+      margin-right: 10px;
+      font-size: 18px;
+    }
+
+    .score {
+      font-size: 24px;
+      background-color: rgba(255, 255, 255, 0.2);
+      padding: 5px 15px;
+      border-radius: 5px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      background-color: #e0e0e0;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: #333;
+    }
+
+    .btn:hover {
+      background-color: #f0f0f0;
+      transform: translateY(-2px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-deal {
+      background-color: #ffb74d;
+    }
+
+    .btn-new {
+      background-color: #81c784;
+    }
+
+    .btn-undo {
+      background-color: #90caf9;
+    }
+
+    .btn-hint {
+      background-color: #64b5f6;
+    }
+
+    .game-container {
+      width: 95%;
+      margin: 80px auto 20px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .difficulty-container {
+      display: flex;
+      align-items: center;
+      margin-left: 10px;
+    }
+
+    .difficulty-text {
+      color: white;
+      margin-right: 5px;
+      border-radius: 4px;
+    }
+
+    .difficulty-select {
+      padding: 5px;
+      border-radius: 4px;
+    }
+
+    .stock {
+      position: fixed;
+      bottom: 60px;
+      right: 40px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .stock-pile {
+      width: var(--card-width);
+      height: var(--card-height);
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      border: 2px dashed rgba(255, 255, 255, 0.4);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      position: relative;
+    }
+
+    .stock-count {
+      position: absolute;
+      top: -15px;
+      left: -20px;
+      background-color: rgba(0, 0, 0, 0.6);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 12px;
+    }
+
+    .stock-cards {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+    }
+
+    .stock-card {
+      position: absolute;
+      width: var(--card-width);
+      height: var(--card-height);
+      background-color: var(--card-back);
+      border-radius: 5px;
+      box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+      transition: transform 0.1s ease;
+      border: 2px solid white;
+    }
+
+    .columns {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .column {
+      width: calc(10% - 9px);
+      min-height: 160px;
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      border: 2px dashed rgba(255, 255, 255, 0.2);
+      position: relative;
+    }
+
+    .column-empty {
+      height: var(--card-height);
+    }
+
+    .card {
+      width: 100%;
+      height: var(--card-height);
+      background-color: var(--card-color);
+      border-radius: 8px;
+      box-shadow: 0 2px 4px var(--shadow-color);
+      margin-top: -110px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      overflow: hidden;
+    }
+
+    .card:first-child {
+      margin-top: 0;
+    }
+
+    .card-content {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .card-content-bottom {
+      position: absolute;
+      bottom: 5px;
+      right: 5px;
+      font-size: 18px;
+      font-weight: bold;
+      transform: rotate(180deg);
+    }
+
+    .card-symbol {
+      margin-left: 2px;
+      font-size: 22px;
+    }
+
+    .card-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 36px;
+    }
+
+    .red {
+      color: #d32f2f;
+    }
+
+    .black {
+      color: #212121;
+    }
+
+    .card-closed {
+      background-color: var(--card-back);
+      color: transparent;
+      background-image: linear-gradient(135deg, #cc0000 25%, #b30000 25%, #b30000 50%, #cc0000 50%, #cc0000 75%, #b30000 75%, #b30000 100%);
+      background-size: 20px 20px;
+      border: 2px solid white;
+    }
+
+    .card-closed .card-content,
+    .card-closed .card-content-bottom,
+    .card-closed .card-center {
+      display: none;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 8px var(--shadow-color);
+    }
+
+    .card-closed:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 8px var(--shadow-color);
+    }
+
+    .card-dragging {
+      position: absolute !important;
+      z-index: 1000 !important;
+      pointer-events: none !important;
+      opacity: 0.9 !important;
+      box-shadow: 0 8px 16px var(--shadow-color) !important;
+      width: var(--card-width) !important;
+      transition: none !important;
+    }
+
+    .highlight {
+      box-shadow: 0 0 15px 5px rgba(255, 255, 0, 0.7) !important;
+    }
+
+    .completed-message {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 20px 40px;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      text-align: center;
+      font-size: 24px;
+      z-index: 2000;
+      display: none;
+    }
+
+    .completed-message h2 {
+      margin-top: 0;
+      color: #076324;
+    }
+
+    .moves-indicator {
+      position: absolute;
+      left: 20px;
+      bottom: 10px;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 14px;
+    }
+
+    .footer {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 12px;
+    }
+
+    @media (max-width: 1200px) {
+      .game-container {
+        width: 98%;
+      }
+
+      :root {
+        --card-width: 80px;
+        --card-height: 112px;
+      }
+
+      .card {
+        margin-top: -85px;
+      }
+
+      .card-content,
+      .card-content-bottom {
+        font-size: 16px;
+      }
+
+      .card-center {
+        font-size: 28px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        height: auto;
+        padding: 10px;
+        gap: 10px;
+      }
+
+      .game-container {
+        margin-top: 130px;
+      }
+
+      .stock {
+        top: -100px;
+      }
+
+      :root {
+        --card-width: 60px;
+        --card-height: 84px;
+      }
+
+      .card {
+        margin-top: -65px;
+      }
+
+      .card-content,
+      .card-content-bottom {
+        font-size: 14px;
+      }
+
+      .card-center {
+        font-size: 20px;
+      }
+
+      .btn {
+        padding: 6px 12px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <div class="score-container">
+      <span class="score-label" data-translate-type="true" data-translate-name="score">Score:</span>
+      <span id="score" class="score">500</span>
+    </div>
+
+    <div class="title" data-translate-type="true" data-translate-name="title">HTML Spider Solitaire</div>
+
+    <div class="controls">
+      <select id="language-select" class="btn" placeholder="Language">
+        <option value="en">English</option>
+        <option value="zh">中文</option>
+      </select>
+      <button id="deal-btn" class="btn btn-deal" data-translate-type="true" data-translate-name="dealCards">Deal Cards</button>
+      <button id="new-game-btn" class="btn btn-new" data-translate-type="true" data-translate-name="newGame">New Game</button>
+      <button id="undo-btn" class="btn btn-undo" data-translate-type="true" data-translate-name="undo">Undo</button>
+      <div id="language-select" class="difficulty-container">
+        <span class="difficulty-text" data-translate-type="true" data-translate-name="difficulty">Difficulty:</span>
+        <select id="difficulty-select" class="btn difficulty-select">
+          <option value="1" data-translate-type="true" data-translate-name="difficultyEasy">Easy (1 Suit)</option>
+          <option value="2" data-translate-type="true" data-translate-name="difficultyMedium">Medium (2 Suits)</option>
+          <option value="4" data-translate-type="true" data-translate-name="difficultyHard">Hard (4 Suits)</option>
+        </select>
+      </div>
+      <button id="hint-btn" class="btn btn-hint" data-translate-type="true" data-translate-name="hint">Hint</button>
+    </div>
+  </div>
+
+  <div class="game-container">
+    <div id="stock-group" class="stock">
+      <div class="stock-pile">
+        <div id="stock-cards" class="stock-cards"></div>
+        <span id="stock-count" class="stock-count">5</span>
+      </div>
+    </div>
+
+    <div id="columns" class="columns">
+      <!-- Columns will be added here by JavaScript -->
+    </div>
+  </div>
+
+  <div class="moves-indicator"><span data-translate-type="true" data-translate-name="moves">Moves: </span><span id="moves-count">0</span></div>
+
+  <div id="completed-message" class="completed-message">
+    <h2 data-translate-type="true" data-translate-name="congratulations">Congratulations!</h2>
+    <p><span data-translate-type="true" data-translate-name="congratulationsText">You've completed the game with a score of </span><span id="final-score">500</span>!</p>
+    <button id="play-again-btn" class="btn btn-new" data-translate-type="true" data-translate-name="playAgain">Play Again</button>
+  </div>
+
+  <div class="footer">
+    HTML Spider Solitaire v3.0 &copy; 2025 | by Zeki T. Luan and Claude 3.7
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const game = {
+        columns: [], // 10 columns
+        stock: [], // remaining cards to deal
+        score: 500,
+        moves: 0,
+        history: [],
+        selectedCard: null,
+        selectedCards: [],
+        draggedCards: [],
+        dragOffsetX: 0,
+        dragOffsetY: 0,
+        isDragging: false,
+        stockDeals: 5, // Number of remaining deals
+        completedSets: 0,
+        difficulty: 1, // 1 = one suit, 2 = two suits, 4 = four suits
+
+        // Card values and ranks
+        suits: ['♠'],
+        values: ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'],
+        ranks: { 'K': 13, 'Q': 12, 'J': 11, '10': 10, '9': 9, '8': 8, '7': 7, '6': 6, '5': 5, '4': 4, '3': 3, '2': 2, 'A': 1 },
+
+        init: function () {
+          this.createGameBoard();
+          this.setupEventListeners();
+          this.newGame();
+        },
+
+        createGameBoard: function () {
+          const columnsContainer = document.getElementById('columns');
+          columnsContainer.innerHTML = '';
+
+          // Create 10 columns
+          for (let i = 0; i < 10; i++) {
+            const column = document.createElement('div');
+            column.className = 'column column-empty';
+            column.id = `column-${i}`;
+            column.dataset.column = i;
+            columnsContainer.appendChild(column);
+          }
+
+          this.updateStockDisplay();
+        },
+
+        setupEventListeners: function () {
+          // Button listeners
+          document.getElementById('new-game-btn').addEventListener('click', () => this.newGame());
+          document.getElementById('deal-btn').addEventListener('click', () => this.dealFromStock());
+          document.getElementById('stock-group').addEventListener('click', () => this.dealFromStock());
+          document.getElementById('undo-btn').addEventListener('click', () => this.undoMove());
+          document.getElementById('play-again-btn').addEventListener('click', () => {
+            document.getElementById('completed-message').style.display = 'none';
+            this.newGame();
+          });
+
+          // Column listeners for drop targets
+          const columns = document.querySelectorAll('.column');
+          columns.forEach(column => {
+            column.addEventListener('dragover', (e) => {
+              e.preventDefault();
+              if (this.isDragging) {
+                column.classList.add('highlight');
+              }
+            });
+
+            column.addEventListener('dragleave', () => {
+              column.classList.remove('highlight');
+            });
+
+            column.addEventListener('drop', (e) => {
+              e.preventDefault();
+              column.classList.remove('highlight');
+              if (this.isDragging && this.draggedCards.length > 0) {
+                const columnIndex = parseInt(column.dataset.column);
+                this.tryDropCards(columnIndex);
+              }
+            });
+          });
+
+          document.addEventListener('mousemove', (e) => {
+            if (this.isDragging && this.draggedCards.length > 0) {
+              const x = e.clientX - this.dragOffsetX - 10;
+              const y = e.clientY - this.dragOffsetY + 40;
+
+              this.draggedCards.forEach((card, index) => {
+                card.style.left = `${x}px`;
+                card.style.top = `${y + index * 30}px`;
+              });
+
+              e.preventDefault();
+            }
+          });
+
+          document.addEventListener('mouseup', () => {
+            if (this.isDragging) {
+              this.endDrag();
+            }
+          });
+        },
+
+        newGame: function () {
+          // Reset game state
+          this.columns = Array(10).fill().map(() => []);
+          this.stock = [];
+          this.score = 500;
+          this.moves = 0;
+          this.history = [];
+          this.stockDeals = 5;
+          this.completedSets = 0;
+
+          this.createDeck();
+
+          this.dealInitialCards();
+
+          this.updateUI();
+        },
+
+        createDeck: function () {
+          const deck = [];
+
+          for (let d = 0; d < 8; d++) {
+            for (let s = 0; s < this.suits.length; s++) {
+              for (let v = 0; v < this.values.length; v++) {
+                deck.push({
+                  value: this.values[v],
+                  suit: this.suits[s],
+                  rank: this.ranks[this.values[v]],
+                  color: this.suits[s] === '♥' || this.suits[s] === '♦' ? 'red' : 'black',
+                  faceUp: false
+                });
+              }
+            }
+          }
+
+          this.shuffle(deck);
+          return deck;
+        },
+
+        shuffle: function (array) {
+          for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+          }
+        },
+
+        dealInitialCards: function () {
+          const deck = this.createDeck();
+
+          // Deal 54 cards (5 to first 4 columns, 4 to last 6 columns)
+          for (let i = 0; i < 10; i++) {
+            const cardsInColumn = i < 4 ? 6 : 5;
+            for (let j = 0; j < cardsInColumn; j++) {
+              if (deck.length > 0) {
+                const card = deck.pop();
+                // Only the last card is face up
+                card.faceUp = (j === cardsInColumn - 1);
+                this.columns[i].push(card);
+              }
+            }
+          }
+
+          // Remaining cards go to stock
+          this.stock = deck;
+          this.updateStockDisplay();
+        },
+
+        updateStockDisplay: function () {
+          const stockCount = document.getElementById('stock-count');
+          const stockCards = document.getElementById('stock-cards');
+
+          stockCount.textContent = this.stockDeals;
+          stockCards.innerHTML = '';
+
+          // Add visual cards to stock display
+          for (let i = 0; i < Math.min(this.stockDeals, 5); i++) {
+            const stockCard = document.createElement('div');
+            stockCard.className = 'stock-card';
+            stockCard.style.transform = `translateX(${i * 4}px) translateY(${i * 4}px)`;
+            stockCards.appendChild(stockCard);
+          }
+
+          // Enable/disable deal button
+          document.getElementById('deal-btn').disabled = this.stockDeals === 0;
+          if (this.stockDeals === 0) {
+            document.getElementById('stock-group').style.pointerEvents = "none";
+          }
+        },
+
+        dealFromStock: function () {
+          if (this.stockDeals > 0 && this.isValidDeal()) {
+            // Save game state for undo
+            this.saveGameState();
+
+            // Deal one card to each column
+            for (let i = 0; i < 10; i++) {
+              if (this.stock.length > 0) {
+                const card = this.stock.pop();
+                card.faceUp = true;
+                this.columns[i].push(card);
+              }
+            }
+
+            this.stockDeals--;
+            this.moves++;
+            this.updateUI();
+          }
+        },
+
+        isValidDeal: function () {
+          return this.columns.every(column => column.length > 0);
+        },
+
+        updateUI: function () {
+          // Update score and moves display
+          document.getElementById('score').textContent = this.score;
+          document.getElementById('moves-count').textContent = this.moves;
+
+          for (let i = 0; i < 10; i++) {
+            const columnElement = document.getElementById(`column-${i}`);
+            columnElement.innerHTML = '';
+            columnElement.className = this.columns[i].length > 0 ? 'column' : 'column column-empty';
+
+            this.columns[i].forEach((card, index) => {
+              const cardElement = this.createCardElement(card, i, index);
+              columnElement.appendChild(cardElement);
+            });
+          }
+
+          this.updateStockDisplay();
+
+          this.checkForCompletedSets();
+          this.checkGameEnd();
+        },
+
+        createCardElement: function (card, columnIndex, rowIndex) {
+          const cardElement = document.createElement('div');
+          cardElement.className = card.faceUp ? `card ${card.color}` : 'card card-closed';
+          cardElement.id = `card-${columnIndex}-${rowIndex}`;
+          cardElement.dataset.column = columnIndex;
+          cardElement.dataset.row = rowIndex;
+
+          if (card.faceUp) {
+            const cardContent = document.createElement('div');
+            cardContent.className = 'card-content';
+            cardContent.innerHTML = `${card.value}<span class="card-symbol">${card.suit}</span>`;
+            cardElement.appendChild(cardContent);
+
+            const cardContentBottom = document.createElement('div');
+            cardContentBottom.className = 'card-content-bottom';
+            cardContentBottom.innerHTML = `${card.value}<span class="card-symbol">${card.suit}</span>`;
+            cardElement.appendChild(cardContentBottom);
+
+            if (!isNaN(card.rank) && card.rank > 1 && card.rank <= 10) {
+              const cardCenter = document.createElement('div');
+              cardCenter.className = 'card-center';
+              cardCenter.textContent = card.suit;
+              cardElement.appendChild(cardCenter);
+            }
+
+            cardElement.addEventListener('mousedown', (e) => {
+              e.preventDefault();
+              if (this.isCardDraggable(columnIndex, rowIndex)) {
+                this.startDrag(e, columnIndex, rowIndex);
+              }
+            });
+          }
+
+          return cardElement;
+        },
+
+        isCardDraggable: function (columnIndex, rowIndex) {
+          const column = this.columns[columnIndex];
+
+          if (rowIndex >= column.length || !column[rowIndex].faceUp) {
+            return false;
+          }
+
+          for (let i = rowIndex; i < column.length - 1; i++) {
+            const currentCard = column[i];
+            const nextCard = column[i + 1];
+
+            if (currentCard.rank !== nextCard.rank + 1 || currentCard.suit !== nextCard.suit) {
+              return false;
+            }
+          }
+
+          return true;
+        },
+
+        startDrag: function (e, columnIndex, rowIndex) {
+          this.saveGameState();
+
+          this.isDragging = true;
+          const column = this.columns[columnIndex];
+
+          this.selectedCards = column.slice(rowIndex);
+          this.draggedCards = [];
+
+          this.selectedCards.forEach((card, index) => {
+            const cardElement = this.createCardElement(card, columnIndex, rowIndex + index);
+            cardElement.style.width = `${document.querySelector('.card').offsetWidth}px`;
+            cardElement.style.position = 'absolute';
+            cardElement.style.zIndex = `${1000 + index}`;
+            cardElement.classList.add('card-dragging');
+            document.body.appendChild(cardElement);
+            this.draggedCards.push(cardElement);
+          });
+
+          const rect = e.target.getBoundingClientRect();
+          this.dragOffsetX = e.clientX - rect.left - 10;
+          this.dragOffsetY = e.clientY - rect.top + 40;
+
+          const x = e.clientX - this.dragOffsetX;
+          const y = e.clientY - this.dragOffsetY;
+
+          this.draggedCards.forEach((card, index) => {
+            card.style.left = `${x}px`;
+            card.style.top = `${y + index * 30}px`;
+          });
+
+          this.sourceColumnIndex = columnIndex;
+        },
+
+
+
+        endDrag: function () {
+          if (!this.isDragging) return;
+
+          this.isDragging = false;
+
+          let closestColumn = null;
+          let minDistance = Infinity;
+
+          if (this.draggedCards.length > 0) {
+            const draggedRect = this.draggedCards[0].getBoundingClientRect();
+            const draggedCenterX = draggedRect.left + draggedRect.width / 2;
+            const draggedCenterY = draggedRect.top + draggedRect.height / 2;
+
+            for (let i = 0; i < 10; i++) {
+              const columnElement = document.getElementById(`column-${i}`);
+              const columnRect = columnElement.getBoundingClientRect();
+              const columnCenterX = columnRect.left + columnRect.width / 2;
+
+              const distance = Math.abs(draggedCenterX - columnCenterX);
+
+              if (distance < minDistance) {
+                minDistance = distance;
+                closestColumn = i;
+              }
+            }
+
+            if (closestColumn !== null && closestColumn !== this.sourceColumnIndex) {
+              this.tryDropCards(closestColumn);
+            } else if (closestColumn === this.sourceColumnIndex) {
+              this.updateUI();
+            }
+          }
+
+          this.draggedCards.forEach(card => {
+            if (card.parentNode) {
+              card.parentNode.removeChild(card);
+            }
+          });
+
+          this.draggedCards = [];
+        },
+
+        tryDropCards: function (targetColumnIndex) {
+          if (!this.selectedCards.length || targetColumnIndex === undefined) return;
+
+          const targetColumn = this.columns[targetColumnIndex];
+          const cardToDrop = this.selectedCards[0];
+
+          let validDrop = false;
+
+          if (targetColumn.length === 0) {
+            validDrop = true;
+          } else {
+            const targetTopCard = targetColumn[targetColumn.length - 1];
+
+            if (targetTopCard.rank === cardToDrop.rank + 1) {
+              validDrop = true;
+            }
+          }
+
+          if (validDrop) {
+            this.columns[this.sourceColumnIndex].splice(
+              this.columns[this.sourceColumnIndex].length - this.selectedCards.length
+            );
+
+            this.columns[targetColumnIndex] = [...targetColumn, ...this.selectedCards];
+
+            if (this.columns[this.sourceColumnIndex].length > 0) {
+              this.columns[this.sourceColumnIndex][this.columns[this.sourceColumnIndex].length - 1].faceUp = true;
+            }
+
+            this.score = Math.max(0, this.score - 1);
+            this.moves++;
+
+            console.log(`Moved cards from column ${this.sourceColumnIndex} to column ${targetColumnIndex}`);
+          } else {
+            console.log("Invalid drop location");
+          }
+
+          this.selectedCards = [];
+          this.updateUI();
+        },
+
+        checkForCompletedSets: function () {
+          for (let i = 0; i < 10; i++) {
+            const column = this.columns[i];
+
+            if (column.length >= 13) {
+              let j = column.length - 1;
+              let seqLength = 1;
+              let seqStart = j;
+
+              while (j > 0 && seqLength < 13) {
+                if (column[j].faceUp &&
+                  column[j - 1].faceUp &&
+                  column[j - 1].rank === column[j].rank + 1 &&
+                  column[j - 1].suit === column[j].suit) {
+                  seqLength++;
+                  j--;
+                } else {
+                  break;
+                }
+              }
+
+              // If found a K-A sequence
+              if (seqLength === 13 && column[seqStart].rank === 1 && column[seqStart - 12].rank === 13) {
+                this.columns[i].splice(seqStart - 12, 13);
+
+                this.score += 100;
+                this.completedSets++;
+
+                if (this.columns[i].length > 0) {
+                  this.columns[i][this.columns[i].length - 1].faceUp = true;
+                }
+
+                i--;
+              }
+            }
+          }
+        },
+
+        checkGameEnd: function () {
+          // Game is won when all 8 sets are completed
+          if (this.completedSets === 8) {
+            document.getElementById('final-score').textContent = this.score;
+            document.getElementById('completed-message').style.display = 'block';
+          }
+        },
+
+        saveGameState: function () {
+          const gameState = {
+            columns: JSON.parse(JSON.stringify(this.columns)),
+            stock: JSON.parse(JSON.stringify(this.stock)),
+            score: this.score,
+            moves: this.moves,
+            stockDeals: this.stockDeals,
+            completedSets: this.completedSets
+          };
+
+          this.history.push(gameState);
+
+          // Limit history size
+          if (this.history.length > 50) {
+            this.history.shift();
+          }
+        },
+
+        undoMove: function () {
+          if (this.history.length > 0) {
+            const lastState = this.history.pop();
+
+            this.columns = lastState.columns;
+            this.stock = lastState.stock;
+            this.score = lastState.score;
+            this.moves = lastState.moves;
+            this.stockDeals = lastState.stockDeals;
+            this.completedSets = lastState.completedSets;
+
+            this.updateUI();
+          }
+        },
+
+        autoComplete: function () {
+          // Auto-complete option: find any cards that can be moved to create completed runs
+          let moveFound = false;
+
+          this.checkForCompletedSets();
+
+          for (let sourceCol = 0; sourceCol < 10; sourceCol++) {
+            const sourceColumn = this.columns[sourceCol];
+
+            if (sourceColumn.length === 0) continue;
+
+            for (let sourceRow = 0; sourceRow < sourceColumn.length; sourceRow++) {
+              if (!sourceColumn[sourceRow].faceUp) continue;
+
+              if (this.isCardDraggable(sourceCol, sourceRow)) {
+                const cardsToMove = sourceColumn.slice(sourceRow);
+                const cardToMove = cardsToMove[0];
+
+                for (let targetCol = 0; targetCol < 10; targetCol++) {
+                  if (targetCol === sourceCol) continue;
+
+                  const targetColumn = this.columns[targetCol];
+
+                  if (targetColumn.length === 0 ||
+                    (targetColumn[targetColumn.length - 1].rank === cardToMove.rank + 1)) {
+
+                    this.saveGameState();
+
+                    this.columns[sourceCol].splice(sourceRow);
+
+                    this.columns[targetCol] = [...targetColumn, ...cardsToMove];
+
+                    if (this.columns[sourceCol].length > 0) {
+                      this.columns[sourceCol][this.columns[sourceCol].length - 1].faceUp = true;
+                    }
+
+                    this.score = Math.max(0, this.score - 1);
+                    this.moves++;
+
+                    this.updateUI();
+                    moveFound = true;
+
+                    return true;
+                  }
+                }
+              }
+            }
+          }
+
+          return moveFound;
+        },
+
+        hint: function () {
+          // Find a valid move and highlight the source and target cards
+
+          for (let sourceCol = 0; sourceCol < 10; sourceCol++) {
+            const sourceColumn = this.columns[sourceCol];
+
+            if (sourceColumn.length === 0) continue;
+
+            for (let sourceRow = 0; sourceRow < sourceColumn.length; sourceRow++) {
+              if (!sourceColumn[sourceRow].faceUp) continue;
+
+              if (this.isCardDraggable(sourceCol, sourceRow)) {
+                const cardToMove = sourceColumn[sourceRow];
+
+                for (let targetCol = 0; targetCol < 10; targetCol++) {
+                  if (targetCol === sourceCol) continue;
+
+                  const targetColumn = this.columns[targetCol];
+
+                  if (targetColumn.length === 0 ||
+                    (targetColumn[targetColumn.length - 1].rank === cardToMove.rank + 1)) {
+
+                    const sourceCardElement = document.getElementById(`card-${sourceCol}-${sourceRow}`);
+
+                    if (sourceCardElement) {
+                      sourceCardElement.classList.add('highlight');
+
+                      if (targetColumn.length > 0) {
+                        const targetCardElement = document.getElementById(`card-${targetCol}-${targetColumn.length - 1}`);
+                        if (targetCardElement) {
+                          targetCardElement.classList.add('highlight');
+                        }
+                      } else {
+                        const targetColumnElement = document.getElementById(`column-${targetCol}`);
+                        if (targetColumnElement) {
+                          targetColumnElement.classList.add('highlight');
+                        }
+                      }
+
+                      setTimeout(() => {
+                        if (sourceCardElement) {
+                          sourceCardElement.classList.remove('highlight');
+                        }
+
+                        if (targetColumn.length > 0) {
+                          const targetCardElement = document.getElementById(`card-${targetCol}-${targetColumn.length - 1}`);
+                          if (targetCardElement) {
+                            targetCardElement.classList.remove('highlight');
+                          }
+                        } else {
+                          const targetColumnElement = document.getElementById(`column-${targetCol}`);
+                          if (targetColumnElement) {
+                            targetColumnElement.classList.remove('highlight');
+                          }
+                        }
+                      }, 2000);
+
+                      return true;
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          // No valid moves found
+          return false;
+        },
+
+        changeDifficulty: function (difficulty) {
+          if (difficulty === 1) {
+            this.suits = ['♠']; 
+            this.difficulty = 1;
+          } else if (difficulty === 2) {
+            this.suits = ['♠', '♥']; 
+            this.difficulty = 2;
+          } else if (difficulty === 4) {
+            this.suits = ['♠', '♥', '♦', '♣'];
+            this.difficulty = 4;
+          }
+
+          this.newGame();
+        }
+      };
+
+      game.init();
+
+      // Translations
+      const translationEnum = {
+        en: {
+          score: "Score:",
+          title: "HTML Spider Solitaire",
+          dealCards: "Deal Cards",
+          newGame: "New Game",
+          undo: "Undo",
+          difficulty: "Difficulty:",
+          difficultyEasy: "Easy (1 Suit)",
+          difficultyMedium: "Medium (2 Suits)",
+          difficultyHard: "Hard (4 Suits)",
+          moves: "Moves: ",
+          congratulations: "Congratulations!",
+          congratulationsText: "You've completed the game with a score of ",
+          playAgain: "Play Again",
+          hint: "Hint"
+        },
+        zh: {
+          score: "得分：",
+          title: "HTML 蜘蛛纸牌",
+          dealCards: "发牌",
+          newGame: "新游戏",
+          undo: "撤销",
+          difficulty: "难度：",
+          difficultyEasy: "容易（一副牌）",
+          difficultyMedium: "普通（两副牌）",
+          difficultyHard: "困难（四副牌）)",
+          moves: "移牌：",
+          congratulations: "祝贺！",
+          congratulationsText: "您完成了游戏，得分为：",
+          playAgain: "重新开始",
+          hint: "提示"
+        }
+      }
+
+      function changeLanguage(value) {
+        const toTranslateElements = document.querySelectorAll('[data-translate-type="true"]');
+        for (let element of toTranslateElements) {
+          element.innerHTML = translationEnum[value][element.getAttribute('data-translate-name')]
+        }
+        localStorage.setItem('language', value)
+      }
+
+      document.getElementById('language-select').addEventListener('change', (e) => {
+        changeLanguage(e.target.value)
+      })
+
+      // Init Language
+      if (localStorage.getItem('language')) {
+        changeLanguage(localStorage.getItem('language'))
+        document.getElementById('language-select').value = localStorage.getItem('language')
+      }
+      else {
+        localStorage.setItem('language', 'en')
+      }
+
+      const difficultySelect = document.getElementById('difficulty-select');
+
+      difficultySelect.addEventListener('change', (e) => {
+        game.changeDifficulty(parseInt(e.target.value));
+      });
+
+      document.getElementById('hint-btn').addEventListener('click', () => game.hint());
+
+      // Add keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
+          // Ctrl/Cmd+Z for undo
+          game.undoMove();
+        } else if (e.key === 'd') {
+          // D for deal
+          game.dealFromStock();
+        } else if (e.key === 'h') {
+          // H for hint
+          game.hint();
+        } else if (e.key === 'n' && (e.ctrlKey || e.metaKey)) {
+          // Ctrl/Cmd+N for new game
+          e.preventDefault();
+          game.newGame();
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>
