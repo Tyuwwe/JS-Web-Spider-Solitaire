@@ -408,8 +408,10 @@
         <option value="en">English</option>
         <option value="zh">中文</option>
       </select>
-      <button id="deal-btn" class="btn btn-deal" data-translate-type="true" data-translate-name="dealCards">Deal Cards</button>
-      <button id="new-game-btn" class="btn btn-new" data-translate-type="true" data-translate-name="newGame">New Game</button>
+      <button id="deal-btn" class="btn btn-deal" data-translate-type="true" data-translate-name="dealCards">Deal
+        Cards</button>
+      <button id="new-game-btn" class="btn btn-new" data-translate-type="true" data-translate-name="newGame">New
+        Game</button>
       <button id="undo-btn" class="btn btn-undo" data-translate-type="true" data-translate-name="undo">Undo</button>
       <div id="language-select" class="difficulty-container">
         <span class="difficulty-text" data-translate-type="true" data-translate-name="difficulty">Difficulty:</span>
@@ -436,16 +438,19 @@
     </div>
   </div>
 
-  <div class="moves-indicator"><span data-translate-type="true" data-translate-name="moves">Moves: </span><span id="moves-count">0</span></div>
+  <div class="moves-indicator"><span data-translate-type="true" data-translate-name="moves">Moves: </span><span
+      id="moves-count">0</span></div>
 
   <div id="completed-message" class="completed-message">
     <h2 data-translate-type="true" data-translate-name="congratulations">Congratulations!</h2>
-    <p><span data-translate-type="true" data-translate-name="congratulationsText">You've completed the game with a score of </span><span id="final-score">500</span>!</p>
-    <button id="play-again-btn" class="btn btn-new" data-translate-type="true" data-translate-name="playAgain">Play Again</button>
+    <p><span data-translate-type="true" data-translate-name="congratulationsText">You've completed the game with a score
+        of </span><span id="final-score">500</span></p>
+    <button id="play-again-btn" class="btn btn-new" data-translate-type="true" data-translate-name="playAgain">Play
+      Again</button>
   </div>
 
   <div class="footer">
-    HTML Spider Solitaire v3.0 &copy; 2025 | by Zeki T. Luan and Claude 3.7
+    HTML Spider Solitaire v3.1 &copy; 2025 | by Zeki T. Luan and Claude 3.7
   </div>
 
   <script>
@@ -680,6 +685,7 @@
           this.updateStockDisplay();
 
           this.checkForCompletedSets();
+
           this.checkGameEnd();
         },
 
@@ -862,34 +868,40 @@
             const column = this.columns[i];
 
             if (column.length >= 13) {
-              let j = column.length - 1;
-              let seqLength = 1;
-              let seqStart = j;
+              for (let startIdx = column.length - 13; startIdx >= 0; startIdx--) {
+                if (column[startIdx].faceUp && column[startIdx].rank === 13) {
+                  let isValidSequence = true;
 
-              while (j > 0 && seqLength < 13) {
-                if (column[j].faceUp &&
-                  column[j - 1].faceUp &&
-                  column[j - 1].rank === column[j].rank + 1 &&
-                  column[j - 1].suit === column[j].suit) {
-                  seqLength++;
-                  j--;
-                } else {
-                  break;
+                  for (let j = 0; j < 12; j++) {
+                    const currentCard = column[startIdx + j];
+                    const nextCard = column[startIdx + j + 1];
+
+                    if (!currentCard.faceUp || !nextCard.faceUp ||
+                      currentCard.rank !== nextCard.rank + 1 ||
+                      currentCard.suit !== nextCard.suit) {
+                      isValidSequence = false;
+                      break;
+                    }
+                  }
+
+                  if (isValidSequence && column[startIdx + 12].rank === 1) {
+                    column.splice(startIdx, 13);
+
+                    this.score += 100;
+                    this.completedSets++;
+
+                    if (column.length > 0 && startIdx > 0) {
+                      column[startIdx - 1].faceUp = true;
+                    } else if (column.length > 0) {
+                      column[column.length - 1].faceUp = true;
+                    }
+
+                    this.updateUI();
+
+                    i--;
+                    break;
+                  }
                 }
-              }
-
-              // If found a K-A sequence
-              if (seqLength === 13 && column[seqStart].rank === 1 && column[seqStart - 12].rank === 13) {
-                this.columns[i].splice(seqStart - 12, 13);
-
-                this.score += 100;
-                this.completedSets++;
-
-                if (this.columns[i].length > 0) {
-                  this.columns[i][this.columns[i].length - 1].faceUp = true;
-                }
-
-                i--;
               }
             }
           }
@@ -1059,10 +1071,10 @@
 
         changeDifficulty: function (difficulty) {
           if (difficulty === 1) {
-            this.suits = ['♠']; 
+            this.suits = ['♠'];
             this.difficulty = 1;
           } else if (difficulty === 2) {
-            this.suits = ['♠', '♥']; 
+            this.suits = ['♠', '♥'];
             this.difficulty = 2;
           } else if (difficulty === 4) {
             this.suits = ['♠', '♥', '♦', '♣'];
